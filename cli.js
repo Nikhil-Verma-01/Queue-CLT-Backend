@@ -5,42 +5,56 @@ const jobStore = require('./jobStore');
 const fs = require('fs');
 const path = require('path');
 const cfgPath = path.join(__dirname, 'config.json');
-const cfg = require('./config.json');
 const { fork } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
 const { handleError } = require('./errorHandler');
 
-program.name('queuectl').description('queuectl - CLI job queue').version('1.0.0');
+program
+  .name('queuectl')
+  .description('queuectl - CLI job queue manager')
+  .version('1.0.0');
 
+/* ----------------------------- ENQUEUE ----------------------------- */
 program
   .command('enqueue <jobJson>')
   .description('Add a new job to the queue. JSON must include "command". Optional: id, max_retries, priority, timeout_seconds, run_at')
   .action((jobJson) => {
     try {
       const job = JSON.parse(jobJson);
-      if (!job.command) throw new Error('job JSON must include "command"');
+      if (!job.command) throw new Error('Job JSON must include "command"');
       const id = jobStore.enqueue(job);
-      console.log('Enqueued job id:', id);
+      console.log('✅ Enqueued job id:', id);
     } catch (err) {
       console.error(handleError('enqueue', err).message);
       process.exit(1);
     }
   });
 
+/* ----------------------------- LIST ----------------------------- */
 program
   .command('list')
   .option('--state <state>', 'Filter by state (pending | processing | completed)')
-  .description('List jobs')
+  .description('List jobs by state')
   .action((opts) => {
     try {
       const rows = jobStore.listByState(opts.state);
       if (!rows.length) return console.log('No jobs found.');
-      console.table(rows.map(r => ({ id: r.id, command: r.command, state: r.state, attempts: r.attempts, max_retries: r.max_retries, priority: r.priority, run_at: r.run_at, output_log: r.output_log })));
+      console.table(rows.map(r => ({
+        id: r.id,
+        command: r.command,
+        state: r.state,
+        attempts: r.attempts,
+        max_retries: r.max_retries,
+        priority: r.priority,
+        run_at: r.run_at,
+        output_log: r.output_log
+      })));
     } catch (err) {
       console.error(handleError('list', err).message);
     }
   });
 
+/* ----------------------------- STATUS ----------------------------- */
 program
   .command('status')
   .description('Show summary of job counts & active workers')
@@ -56,14 +70,17 @@ program
     }
   });
 
-program
-  .command('worker:start')
+/* ----------------------------- WORKER COMMANDS ----------------------------- */
+const worker = program.command('worker').description('Manage worker processes');
+
+worker
+  .command('start')
   .option('--count <n>', 'Number of workers to start', '1')
-  .description('Start worker processes')
+  .description('Start one or more worker processes')
   .action((opts) => {
     try {
       const count = Math.max(1, parseInt(opts.count || '1', 10));
-      console.log(`Starting ${count} worker(s)...`);
+      console.log(`🚀 Starting ${count} worker(s)...`);
       for (let i = 0; i < count; i++) {
         const env = Object.assign({}, process.env, { WORKER_ID: uuidv4() });
         const child = fork(path.join(__dirname, 'worker.js'), { env, detached: true, stdio: 'inherit' });
@@ -74,9 +91,9 @@ program
     }
   });
 
-program
-  .command('worker:stop')
-  .description('Stop all workers (graceful)')
+worker
+  .command('stop')
+  .description('Stop all workers gracefully')
   .action(() => {
     try {
       const workers = jobStore.listWorkers();
@@ -84,7 +101,7 @@ program
       for (const w of workers) {
         try {
           process.kill(w.pid, 'SIGTERM');
-          console.log(`Sent SIGTERM to pid ${w.pid} (worker ${w.id})`);
+          console.log(`🛑 Sent SIGTERM to pid ${w.pid} (worker ${w.id})`);
         } catch (e) {
           console.error(handleError('worker:stop', e).message);
         }
@@ -94,6 +111,7 @@ program
     }
   });
 
+/* ----------------------------- DLQ ----------------------------- */
 const dlq = program.command('dlq').description('Dead Letter Queue');
 
 dlq
@@ -103,7 +121,14 @@ dlq
     try {
       const rows = jobStore.dlqList();
       if (!rows.length) return console.log('DLQ empty.');
-      console.table(rows.map(r => ({ id: r.id, command: r.command, attempts: r.attempts, max_retries: r.max_retries, moved_at: r.moved_at, output_log: r.output_log })));
+      console.table(rows.map(r => ({
+        id: r.id,
+        command: r.command,
+        attempts: r.attempts,
+        max_retries: r.max_retries,
+        moved_at: r.moved_at,
+        output_log: r.output_log
+      })));
     } catch (err) {
       console.error(handleError('dlq:list', err).message);
     }
@@ -115,13 +140,14 @@ dlq
   .action((id) => {
     try {
       const res = jobStore.retryDLQ(id);
-      if (res) console.log('Requeued job id:', res);
+      if (res) console.log('🔁 Requeued job id:', res);
       else console.log('DLQ job not found:', id);
     } catch (err) {
       console.error(handleError('dlq:retry', err).message);
     }
   });
 
+/* ----------------------------- CONFIG ----------------------------- */
 const conf = program.command('config').description('Get/set configuration');
 
 conf
@@ -133,7 +159,7 @@ conf
       const num = Number(value);
       config[key] = isNaN(num) ? value : num;
       fs.writeFileSync(cfgPath, JSON.stringify(config, null, 2));
-      console.log('Config updated:', key, '=>', config[key]);
+      console.log('⚙️  Config updated:', key, '=>', config[key]);
     } catch (err) {
       console.error(handleError('config:set', err).message);
     }
@@ -141,6 +167,7 @@ conf
 
 conf
   .command('get <key>')
+  .description('Get config value')
   .action((key) => {
     try {
       const config = JSON.parse(fs.readFileSync(cfgPath));
@@ -150,6 +177,7 @@ conf
     }
   });
 
+/* ----------------------------- JOB GET ----------------------------- */
 program
   .command('get <id>')
   .description('Get job by id (jobs + DLQ)')
@@ -163,18 +191,22 @@ program
     }
   });
 
-program
-  .command('dashboard:start')
+/* ----------------------------- DASHBOARD ----------------------------- */
+const dashboard = program.command('dashboard').description('Web dashboard management');
+
+dashboard
+  .command('start')
   .description('Start the minimal web dashboard (Express) for monitoring')
   .action(() => {
     try {
       const child = fork(path.join(__dirname, 'dashboard.js'), { detached: false, stdio: 'inherit' });
-      console.log('Dashboard started as child process.');
+      console.log('🧭 Dashboard started as child process.');
     } catch (err) {
       console.error(handleError('dashboard:start', err).message);
     }
   });
 
+/* ----------------------------- DEFAULT ----------------------------- */
 if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
