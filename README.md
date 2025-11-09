@@ -94,18 +94,18 @@ npm --coverage
 For a detailed architecture breakdown, check design.md
 
 That document covers:
---Queue architecture and lifecycle
---Retry/backoff logic
---DLQ and timeout handling
---Dashboard data flow
---CLI and worker interaction diagram
+- Queue architecture and lifecycle
+- Retry/backoff logic
+- DLQ and timeout handling
+- Dashboard data flow
+- CLI and worker interaction diagram
 
 
 ---
 
 
 
-```markdown
+
 ### 🧠 Design Document — QueueCTL
 
 #### 1. Overview
@@ -188,34 +188,40 @@ It provides fault-tolerant execution with retry, delay, and priority handling, m
 
 Each job moves through multiple states, tracked in the queue memory and dashboard.
 
-+-------------+
-| Created |
-+------+------+
-|
-v
-+------+------+
-| Queued |
-+------+------+
-|
-v
-+------+------+
-| Processing |
-+------+------+
-|
-+------+------+
-| Completed |<------+
-+-------------+ |
-| |
-v |
-+-------------+ |
-| Failed +-------+
-+------+------+
-|
-v
-+-------------+
-| DLQ (if |
-| retries max)|
-+-------------+
+```
+        +----------+
+        | Created  |
+        +----------+
+            |
+            v
+        +----------+
+        | Queued   |
+        +----------+
+            |
+            v
+        +----------+
+        |Processing|
+        +----------+
+        |          |
+        v          v
+    +--------+   +--------+
+    |Completed|  | Failed |
+    +--------+   +--------+
+                    |
+                    v
+            +-------------+
+            |   Retry?    |
+            +------+------+ 
+                   |
+        +----------+-----------+
+        |                      |
+        v                      v
+    (Yes -> back to Queue)   (No -> DLQ)
+
++--------+
+|  DLQ   |
++--------+
+```
 
 
 ---
@@ -254,6 +260,7 @@ Implementation uses a **Min-Heap** or sorted array to maintain priority ordering
 QueueCTL supports scheduling via:
 ```bash
 queuectl add "send-report" --delay 60000
+```
 
 
 
