@@ -1,0 +1,36 @@
+{
+  "name": "queuectl",
+  "version": "1.0.0",
+  "description": "CLI job queue with workers, retries/backoff, DLQ, priorities, timeouts, scheduled jobs, and dashboard",
+  "main": "cli.js",
+  "bin": {
+    "queuectl": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js",
+    "dashboard": "node dashboard.js",
+    "test": "jest --runInBand --silent --forceExit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.2.0",
+    "commander": "^10.0.1",
+    "execa": "^5.1.1",
+    "express": "^4.21.2",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.5.0",
+    "jest": "^30.2.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testTimeout": 20000
+  }
+}

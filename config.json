@@ -1,0 +1,10 @@
+{
+  "base_backoff": 2,
+  "default_max_retries": 3,
+  "db_path": "./queue.db",
+  "claim_query_limit": 1,
+  "default_timeout_seconds": 30,
+  "dashboard_port": 3000,
+  "logs_dir": "./logs",
+  "max-retries": 5
+}

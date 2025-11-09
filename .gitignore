@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# Environment and local configuration
+.env
+.env.local
+.env.test
+.env.production
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+*.swp
+
+# Optional: Ignore local SQLite or test databases
+*.db
+
+# Allow required JSON files
+package-lock.json
+
