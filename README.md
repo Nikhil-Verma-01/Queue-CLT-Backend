@@ -33,7 +33,7 @@ QueueCTL is ideal for developers and teams who want to:
 ---
 
 ## 🧱 Folder Structure
-
+```
 queuectl/
 ├── cli.js               # Entry point for CLI commands (Commander-based interface)
 ├── dashboard.js         # Express server for the interactive web dashboard
@@ -50,7 +50,7 @@ queuectl/
 ├── README.md            # Project documentation
 └── design.md            # System architecture and design details
 
-
+```
 
 ---
 
