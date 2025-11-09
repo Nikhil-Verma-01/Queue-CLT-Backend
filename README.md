@@ -71,7 +71,7 @@ npm link
 queuectl enqueue '{"command": "send-email", "priority": "high", "max_retries": 2, "timeout_seconds": 30}'
 
 # 2. Start worker(s)
-queuectl worker:start --count 2
+queuectl worker start --count 3
 
 # 3. View job list
 queuectl list
@@ -80,7 +80,10 @@ queuectl list
 queuectl status
 
 # 5. View dashboard
-queuectl dashboard:start
+queuectl dashboard start
+
+# 6. Stop all worker 
+queueclt worker stop
 
 ```
 ## 🧪 Testing
