@@ -35,20 +35,21 @@ QueueCTL is ideal for developers and teams who want to:
 ## 🧱 Folder Structure
 
 queuectl/
-├── cli.js # Entry point for CLI commands
-├── dashboard.js # Express server for dashboard UI
-|
-│── queue.js # Core queue management logic
-│── worker.js # Worker process handling job execution
-│── job.js # Job class with status, priority, and metadata
-│── utils.js # Helpers and utilities
-│ 
+├── cli.js               # Entry point for CLI commands (Commander-based interface)
+├── dashboard.js         # Express server for the interactive web dashboard
+│
+├── queue.js             # Core queue management logic (scheduling, retries, priorities)
+├── worker.js            # Worker process to execute and manage jobs
+├── job.js               # Job class handling state, metadata, and lifecycle
+├── utils.js             # Helper utilities (logging, formatting, etc.)
+│
 ├── tests/
-|── queueclt.test.js
-│ 
-├── package.json
-├── README.md
-└── design.md
+│   └── queuectl.test.js # Unit tests for queue and worker functionality
+│
+├── package.json         # Project dependencies, scripts, and CLI configuration
+├── README.md            # Project documentation
+└── design.md            # System architecture and design details
+
 
 
 ---
@@ -105,4 +106,4 @@ That document covers:
 Nikhil Verma
 Final-year B.Tech, NIT Jaipur
 Email: [nik.h0ill907gmail.com]
-LinkedIn: [linkedin.com/in/yourprofile](https://www.linkedin.com/in/nikhil-verma-b38800263/)
+LinkedIn: [linkedin.com/in/Nikhil Verma](https://www.linkedin.com/in/nikhil-verma-b38800263/)
